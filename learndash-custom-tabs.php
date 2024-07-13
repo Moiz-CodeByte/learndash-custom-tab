@@ -229,6 +229,7 @@ add_filter( 'learndash_content_tabs', function( $tabs = array(), $context = '', 
 function learndash_custom_tab_enqueue_scripts() {
     // Enqueue Select2 CSS
     wp_enqueue_style( 'select2-css', 'https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css' );
+    wp_enqueue_style( 'learndash-custom-tab-style', plugins_url( '/assets/css/custom-tab-style.css', __FILE__ ) );
 
     // Enqueue jQuery if it's not already included
     wp_enqueue_script( 'jquery' );

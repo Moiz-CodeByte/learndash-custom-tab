@@ -1,0 +1,7 @@
+.select2 {
+    width: 70% !important; /* Ensure full width */
+}
+
+.select2-container {
+    width: 70% !important; /* Ensures the container is full width */
+}
