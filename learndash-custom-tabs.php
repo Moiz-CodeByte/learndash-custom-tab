@@ -2,8 +2,8 @@
 /*
 Plugin Name: LearnDash Custom Tab
 Description: Adds a custom tab to LearnDash courses, lessons, topics, and quizzes.
-Version: 1.2
-Author: Adeel Naeem
+Version: 1.0
+Author: Abdul Moiz
 Text Domain: learndash-custom-tab
 Domain Path: /languages
 */
