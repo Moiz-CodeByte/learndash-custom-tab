@@ -77,16 +77,28 @@ function custom_tab_meta_box_callback( $post ) {
     // Course Selection
     $courses = get_posts( array( 'post_type' => 'sfwd-courses', 'numberposts' => -1 ) );
     echo '<p><strong>' . __( 'Select Courses:', 'learndash-custom-tab' ) . '</strong></p>';
+    echo '<select name="custom_tab_courses_option">';
+    echo '<option value="all"' . ( $selected_courses == 'all' ? ' selected' : '' ) . '>' . __( 'All Courses', 'learndash-custom-tab' ) . '</option>';
+    echo '<option value="selected"' . ( $selected_courses != 'all' ? ' selected' : '' ) . '>' . __( 'Selected Courses', 'learndash-custom-tab' ) . '</option>';
+    echo '</select><br><br>';
+    echo '<div id="custom_tab_courses" style="' . ( $selected_courses == 'all' ? 'display:none;' : '' ) . '">';
     foreach ( $courses as $course ) {
-        echo '<input type="checkbox" name="custom_tab_courses[]" value="' . esc_attr( $course->ID ) . '" ' .( is_array( $selected_courses ) && in_array( $course->ID, $selected_courses ) ? 'checked' : '' ) . '> ' . esc_html( $course->post_title ) . '<br>';
+        echo '<input type="checkbox" name="custom_tab_courses[]" value="' . esc_attr( $course->ID ) . '" ' . ( is_array( $selected_courses ) && in_array( $course->ID, $selected_courses ) ? 'checked' : '' ) . '> ' . esc_html( $course->post_title ) . '<br>';
     }
+    echo '</div>';
 
-    // User Role Selection
-    $roles = wp_roles()->roles;
-    echo '<p><strong>' . __( 'Select User Roles:', 'learndash-custom-tab' ) . '</strong></p>';
-    foreach ( $roles as $role_key => $role ) {
-        echo '<input type="checkbox" name="custom_tab_users[]" value="' . esc_attr( $role_key ) . '" ' . ( is_array( $selected_users ) && in_array( $role_key, $selected_users ) ? 'checked' : '' ) . '> ' . esc_html( $role['name'] ) . '<br>';
+    // User Selection
+    $users = get_users();
+    echo '<p><strong>' . __( 'Select Users:', 'learndash-custom-tab' ) . '</strong></p>';
+    echo '<select name="custom_tab_users_option">';
+    echo '<option value="all"' . ( $selected_users == 'all' ? ' selected' : '' ) . '>' . __( 'All Users', 'learndash-custom-tab' ) . '</option>';
+    echo '<option value="selected"' . ( $selected_users != 'all' ? ' selected' : '' ) . '>' . __( 'Selected Users', 'learndash-custom-tab' ) . '</option>';
+    echo '</select><br><br>';
+    echo '<div id="custom_tab_users" style="' . ( $selected_users == 'all' ? 'display:none;' : '' ) . '">';
+    foreach ( $users as $user ) {
+        echo '<input type="checkbox" name="custom_tab_users[]" value="' . esc_attr( $user->ID ) . '" ' . ( is_array( $selected_users ) && in_array( $user->ID, $selected_users ) ? 'checked' : '' ) . '> ' . esc_html( $user->display_name ) . '<br>';
     }
+    echo '</div>';
 }
 
 // Save Meta Box Data
@@ -112,19 +124,33 @@ function custom_tab_save_meta_box_data( $post_id ) {
     }
 
     // Sanitize and save the selected courses.
-    if ( isset( $_POST['custom_tab_courses'] ) ) {
-        $selected_courses = array_map( 'sanitize_text_field', $_POST['custom_tab_courses'] );
-        update_post_meta( $post_id, '_custom_tab_courses', $selected_courses );
-    } else {
-        delete_post_meta( $post_id, '_custom_tab_courses' );
+    if ( isset( $_POST['custom_tab_courses_option'] ) ) {
+        $selected_courses_option = sanitize_text_field( $_POST['custom_tab_courses_option'] );
+        if ( $selected_courses_option == 'all' ) {
+            update_post_meta( $post_id, '_custom_tab_courses', 'all' );
+        } else {
+            if ( isset( $_POST['custom_tab_courses'] ) ) {
+                $selected_courses = array_map( 'sanitize_text_field', $_POST['custom_tab_courses'] );
+                update_post_meta( $post_id, '_custom_tab_courses', $selected_courses );
+            } else {
+                delete_post_meta( $post_id, '_custom_tab_courses' );
+            }
+        }
     }
 
     // Sanitize and save the selected users.
-    if ( isset( $_POST['custom_tab_users'] ) ) {
-        $selected_users = array_map( 'sanitize_text_field', $_POST['custom_tab_users'] );
-        update_post_meta( $post_id, '_custom_tab_users', $selected_users );
-    } else {
-        delete_post_meta( $post_id, '_custom_tab_users' );
+    if ( isset( $_POST['custom_tab_users_option'] ) ) {
+        $selected_users_option = sanitize_text_field( $_POST['custom_tab_users_option'] );
+        if ( $selected_users_option == 'all' ) {
+            update_post_meta( $post_id, '_custom_tab_users', 'all' );
+        } else {
+            if ( isset( $_POST['custom_tab_users'] ) ) {
+                $selected_users = array_map( 'sanitize_text_field', $_POST['custom_tab_users'] );
+                update_post_meta( $post_id, '_custom_tab_users', $selected_users );
+            } else {
+                delete_post_meta( $post_id, '_custom_tab_users' );
+            }
+        }
     }
 }
 add_action( 'save_post', 'custom_tab_save_meta_box_data' );
@@ -137,9 +163,8 @@ add_filter( 'learndash_content_tabs', function( $tabs = array(), $context = '', 
     foreach ( $custom_tabs as $custom_tab ) {
         $selected_courses = get_post_meta( $custom_tab->ID, '_custom_tab_courses', true );
         $selected_users = get_post_meta( $custom_tab->ID, '_custom_tab_users', true );
-        $user = get_userdata( $user_id );
 
-        if ( in_array( $course_id, $selected_courses ) && array_intersect( $user->roles, $selected_users ) ) {
+        if ( ( $selected_courses == 'all' || in_array( $course_id, $selected_courses ) ) && ( $selected_users == 'all' || in_array( $user_id, $selected_users ) ) ) {
             $tabs[ 'custom_tab_' . $custom_tab->ID ] = array(
                 'id'      => 'custom_tab_' . $custom_tab->ID,
                 'icon'    => 'ld-custom-tab-icon',
@@ -152,10 +177,16 @@ add_filter( 'learndash_content_tabs', function( $tabs = array(), $context = '', 
     return $tabs;
 }, 30, 4 );
 
+// Enqueue custom styles and scripts
+function learndash_custom_tab_enqueue_scripts() {
+    wp_enqueue_style( 'learndash-custom-tab-style', plugins_url( '/css/custom-tab-style.css', __FILE__ ) );
+    wp_enqueue_script( 'learndash-custom-tab-script', plugins_url( '/js/custom-tab-script.js', __FILE__ ), array( 'jquery' ), null, true );
+}
+add_action( 'wp_enqueue_scripts', 'learndash_custom_tab_enqueue_scripts' );
+
 // Load plugin textdomain for translations.
 function learndash_custom_tab_load_textdomain() {
     load_plugin_textdomain( 'learndash-custom-tab', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
 }
 add_action( 'plugins_loaded', 'learndash_custom_tab_load_textdomain' );
-
 ?>
