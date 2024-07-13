@@ -23,4 +23,9 @@ jQuery(document).ready(function($) {
     $('select[name="custom_tab_quizzes_option"]').change(function() {
         $('#custom_tab_quizzes').toggle($(this).val() === 'selected');
     });
+
+    jQuery(document).ready(function($) {
+        $('.select2').select2();
+    });
+    
 });

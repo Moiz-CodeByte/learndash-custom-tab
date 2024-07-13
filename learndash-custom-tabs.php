@@ -2,8 +2,8 @@
 /*
 Plugin Name: LearnDash Custom Tab
 Description: Adds a custom tab to LearnDash courses, lessons, topics, and quizzes.
-Version: 1.0
-Author: Abdul Moiz
+Version: 1.3
+Author: Adeel Naeem
 Text Domain: learndash-custom-tab
 Domain Path: /languages
 */
@@ -16,25 +16,25 @@ if ( ! defined( 'ABSPATH' ) ) {
 // Register Custom Post Type
 function register_custom_tab_cpt() {
     $labels = array(
-        'name'                  => _x( 'Custom Tabs', 'Post Type General Name', 'learndash-custom-tab' ),
-        'singular_name'         => _x( 'Custom Tab', 'Post Type Singular Name', 'learndash-custom-tab' ),
-        'menu_name'             => __( 'Custom Tabs', 'learndash-custom-tab' ),
-        'all_items'             => __( 'All Custom Tabs', 'learndash-custom-tab' ),
-        'add_new_item'          => __( 'Add New Custom Tab', 'learndash-custom-tab' ),
-        'new_item'              => __( 'New Custom Tab', 'learndash-custom-tab' ),
-        'edit_item'             => __( 'Edit Custom Tab', 'learndash-custom-tab' ),
-        'view_item'             => __( 'View Custom Tab', 'learndash-custom-tab' ),
+        'name'          => _x( 'Custom Tabs', 'Post Type General Name', 'learndash-custom-tab' ),
+        'singular_name' => _x( 'Custom Tab', 'Post Type Singular Name', 'learndash-custom-tab' ),
+        'menu_name'     => __( 'Custom Tabs', 'learndash-custom-tab' ),
+        'all_items'     => __( 'All Custom Tabs', 'learndash-custom-tab' ),
+        'add_new_item'  => __( 'Add New Custom Tab', 'learndash-custom-tab' ),
+        'new_item'      => __( 'New Custom Tab', 'learndash-custom-tab' ),
+        'edit_item'     => __( 'Edit Custom Tab', 'learndash-custom-tab' ),
+        'view_item'     => __( 'View Custom Tab', 'learndash-custom-tab' ),
     );
 
     $args = array(
-        'label'                 => __( 'Custom Tab', 'learndash-custom-tab' ),
-        'labels'                => $labels,
-        'supports'              => array( 'title', 'editor' ),
-        'public'                => false,
-        'show_ui'               => true,
-        'show_in_menu'          => 'learndash-lms',
-        'menu_position'         => 5,
-        'capability_type'       => 'page',
+        'label'         => __( 'Custom Tab', 'learndash-custom-tab' ),
+        'labels'        => $labels,
+        'supports'      => array( 'title', 'editor' ),
+        'public'        => false,
+        'show_ui'       => true,
+        'show_in_menu'  => 'learndash-lms',
+        'menu_position' => 5,
+        'capability_type' => 'page',
     );
 
     register_post_type( 'custom_tab', $args );
@@ -57,7 +57,7 @@ add_action( 'add_meta_boxes', 'custom_tab_add_meta_box' );
 function custom_tab_meta_box_callback( $post ) {
     wp_nonce_field( 'custom_tab_save_meta_box_data', 'custom_tab_meta_box_nonce' );
 
-    // Get saved values
+    // Retrieve saved values
     $selected_users = get_post_meta( $post->ID, '_custom_tab_users', true );
     $display_on = get_post_meta( $post->ID, '_custom_tab_display_on', true );
     $selected_courses = get_post_meta( $post->ID, '_custom_tab_courses', true );
@@ -67,60 +67,54 @@ function custom_tab_meta_box_callback( $post ) {
     $icon_class = get_post_meta( $post->ID, '_custom_tab_icon_class', true );
 
     // User Selection
-    $users = get_users();
     echo '<p><strong>' . __( 'Display To/Select Users:', 'learndash-custom-tab' ) . '</strong></p>';
-    echo '<select name="custom_tab_users[]" multiple>';
+    echo '<select name="custom_tab_users[]" multiple class="select2">';
     echo '<option value="all"' . ( $selected_users == 'all' ? ' selected' : '' ) . '>' . __( 'All Users', 'learndash-custom-tab' ) . '</option>';
-    foreach ( $users as $user ) {
+    foreach ( get_users() as $user ) {
         echo '<option value="' . esc_attr( $user->ID ) . '" ' . ( is_array( $selected_users ) && in_array( $user->ID, $selected_users ) ? 'selected' : '' ) . '>' . esc_html( $user->display_name ) . '</option>';
     }
     echo '</select><br><br>';
 
     // Display On Selection
     echo '<p><strong>' . __( 'Display On:', 'learndash-custom-tab' ) . '</strong></p>';
-    echo '<select name="custom_tab_display_on">';
-    echo '<option value="courses"' . ( $display_on == 'courses' ? ' selected' : '' ) . '>' . __( 'Courses', 'learndash-custom-tab' ) . '</option>';
-    echo '<option value="lessons"' . ( $display_on == 'lessons' ? ' selected' : '' ) . '>' . __( 'Lessons', 'learndash-custom-tab' ) . '</option>';
-    echo '<option value="topics"' . ( $display_on == 'topics' ? ' selected' : '' ) . '>' . __( 'Topics', 'learndash-custom-tab' ) . '</option>';
-    echo '<option value="quizzes"' . ( $display_on == 'quizzes' ? ' selected' : '' ) . '>' . __( 'Quizzes', 'learndash-custom-tab' ) . '</option>';
+    echo '<select name="custom_tab_display_on" class="select2">';
+    foreach ( ['courses', 'lessons', 'topics', 'quizzes'] as $option ) {
+        echo '<option value="' . $option . '"' . ( $display_on == $option ? ' selected' : '' ) . '>' . ucfirst($option) . '</option>';
+    }
     echo '</select><br><br>';
 
     // Course Selection
     echo '<p><strong>' . __( 'Select Courses:', 'learndash-custom-tab' ) . '</strong></p>';
-    echo '<select name="custom_tab_courses[]" multiple>';
+    echo '<select name="custom_tab_courses[]" multiple class="select2">';
     echo '<option value="all"' . ( $selected_courses == 'all' ? ' selected' : '' ) . '>' . __( 'All Courses', 'learndash-custom-tab' ) . '</option>';
-    $courses = get_posts( array( 'post_type' => 'sfwd-courses', 'numberposts' => -1 ) );
-    foreach ( $courses as $course ) {
+    foreach ( get_posts( array( 'post_type' => 'sfwd-courses', 'numberposts' => -1 ) ) as $course ) {
         echo '<option value="' . esc_attr( $course->ID ) . '" ' . ( is_array( $selected_courses ) && in_array( $course->ID, $selected_courses ) ? 'selected' : '' ) . '>' . esc_html( $course->post_title ) . '</option>';
     }
     echo '</select><br><br>';
 
     // Lesson Selection
     echo '<p><strong>' . __( 'Select Lessons:', 'learndash-custom-tab' ) . '</strong></p>';
-    echo '<select name="custom_tab_lessons[]" multiple>';
+    echo '<select name="custom_tab_lessons[]" multiple class="select2">';
     echo '<option value="all"' . ( $selected_lessons == 'all' ? ' selected' : '' ) . '>' . __( 'All Lessons', 'learndash-custom-tab' ) . '</option>';
-    $lessons = get_posts( array( 'post_type' => 'sfwd-lessons', 'numberposts' => -1 ) );
-    foreach ( $lessons as $lesson ) {
+    foreach ( get_posts( array( 'post_type' => 'sfwd-lessons', 'numberposts' => -1 ) ) as $lesson ) {
         echo '<option value="' . esc_attr( $lesson->ID ) . '" ' . ( is_array( $selected_lessons ) && in_array( $lesson->ID, $selected_lessons ) ? 'selected' : '' ) . '>' . esc_html( $lesson->post_title ) . '</option>';
     }
     echo '</select><br><br>';
 
     // Topic Selection
     echo '<p><strong>' . __( 'Select Topics:', 'learndash-custom-tab' ) . '</strong></p>';
-    echo '<select name="custom_tab_topics[]" multiple>';
+    echo '<select name="custom_tab_topics[]" multiple class="select2">';
     echo '<option value="all"' . ( $selected_topics == 'all' ? ' selected' : '' ) . '>' . __( 'All Topics', 'learndash-custom-tab' ) . '</option>';
-    $topics = get_posts( array( 'post_type' => 'sfwd-topic', 'numberposts' => -1 ) );
-    foreach ( $topics as $topic ) {
+    foreach ( get_posts( array( 'post_type' => 'sfwd-topic', 'numberposts' => -1 ) ) as $topic ) {
         echo '<option value="' . esc_attr( $topic->ID ) . '" ' . ( is_array( $selected_topics ) && in_array( $topic->ID, $selected_topics ) ? 'selected' : '' ) . '>' . esc_html( $topic->post_title ) . '</option>';
     }
     echo '</select><br><br>';
 
     // Quiz Selection
     echo '<p><strong>' . __( 'Select Quizzes:', 'learndash-custom-tab' ) . '</strong></p>';
-    echo '<select name="custom_tab_quizzes[]" multiple>';
+    echo '<select name="custom_tab_quizzes[]" multiple class="select2">';
     echo '<option value="all"' . ( $selected_quizzes == 'all' ? ' selected' : '' ) . '>' . __( 'All Quizzes', 'learndash-custom-tab' ) . '</option>';
-    $quizzes = get_posts( array( 'post_type' => 'sfwd-quiz', 'numberposts' => -1 ) );
-    foreach ( $quizzes as $quiz ) {
+    foreach ( get_posts( array( 'post_type' => 'sfwd-quiz', 'numberposts' => -1 ) ) as $quiz ) {
         echo '<option value="' . esc_attr( $quiz->ID ) . '" ' . ( is_array( $selected_quizzes ) && in_array( $quiz->ID, $selected_quizzes ) ? 'selected' : '' ) . '>' . esc_html( $quiz->post_title ) . '</option>';
     }
     echo '</select><br><br>';
@@ -149,50 +143,28 @@ function custom_tab_save_meta_box_data( $post_id ) {
     }
 
     // Save user selection
-    if ( isset( $_POST['custom_tab_users'] ) ) {
-        $selected_users = array_map( 'sanitize_text_field', $_POST['custom_tab_users'] );
-        update_post_meta( $post_id, '_custom_tab_users', $selected_users );
-    } else {
-        update_post_meta( $post_id, '_custom_tab_users', [] );
-    }
+    $selected_users = isset( $_POST['custom_tab_users'] ) ? array_map( 'sanitize_text_field', $_POST['custom_tab_users'] ) : [];
+    update_post_meta( $post_id, '_custom_tab_users', $selected_users );
 
     // Save display on selection
-    if ( isset( $_POST['custom_tab_display_on'] ) ) {
-        $display_on = sanitize_text_field( $_POST['custom_tab_display_on'] );
-        update_post_meta( $post_id, '_custom_tab_display_on', $display_on );
-    }
+    $display_on = isset( $_POST['custom_tab_display_on'] ) ? sanitize_text_field( $_POST['custom_tab_display_on'] ) : '';
+    update_post_meta( $post_id, '_custom_tab_display_on', $display_on );
 
     // Save courses selection
-    if ( isset( $_POST['custom_tab_courses'] ) ) {
-        $selected_courses = array_map( 'sanitize_text_field', $_POST['custom_tab_courses'] );
-        update_post_meta( $post_id, '_custom_tab_courses', $selected_courses );
-    } else {
-        update_post_meta( $post_id, '_custom_tab_courses', [] );
-    }
+    $selected_courses = isset( $_POST['custom_tab_courses'] ) ? array_map( 'sanitize_text_field', $_POST['custom_tab_courses'] ) : [];
+    update_post_meta( $post_id, '_custom_tab_courses', $selected_courses );
 
     // Save lessons selection
-    if ( isset( $_POST['custom_tab_lessons'] ) ) {
-        $selected_lessons = array_map( 'sanitize_text_field', $_POST['custom_tab_lessons'] );
-        update_post_meta( $post_id, '_custom_tab_lessons', $selected_lessons );
-    } else {
-        update_post_meta( $post_id, '_custom_tab_lessons', [] );
-    }
+    $selected_lessons = isset( $_POST['custom_tab_lessons'] ) ? array_map( 'sanitize_text_field', $_POST['custom_tab_lessons'] ) : [];
+    update_post_meta( $post_id, '_custom_tab_lessons', $selected_lessons );
 
     // Save topics selection
-    if ( isset( $_POST['custom_tab_topics'] ) ) {
-        $selected_topics = array_map( 'sanitize_text_field', $_POST['custom_tab_topics'] );
-        update_post_meta( $post_id, '_custom_tab_topics', $selected_topics );
-    } else {
-        update_post_meta( $post_id, '_custom_tab_topics', [] );
-    }
+    $selected_topics = isset( $_POST['custom_tab_topics'] ) ? array_map( 'sanitize_text_field', $_POST['custom_tab_topics'] ) : [];
+    update_post_meta( $post_id, '_custom_tab_topics', $selected_topics );
 
     // Save quizzes selection
-    if ( isset( $_POST['custom_tab_quizzes'] ) ) {
-        $selected_quizzes = array_map( 'sanitize_text_field', $_POST['custom_tab_quizzes'] );
-        update_post_meta( $post_id, '_custom_tab_quizzes', $selected_quizzes );
-    } else {
-        update_post_meta( $post_id, '_custom_tab_quizzes', [] );
-    }
+    $selected_quizzes = isset( $_POST['custom_tab_quizzes'] ) ? array_map( 'sanitize_text_field', $_POST['custom_tab_quizzes'] ) : [];
+    update_post_meta( $post_id, '_custom_tab_quizzes', $selected_quizzes );
 
     // Save icon class
     if ( isset( $_POST['custom_tab_icon_class'] ) ) {
@@ -254,14 +226,23 @@ add_filter( 'learndash_content_tabs', function( $tabs = array(), $context = '', 
     return $tabs;
 }, 30, 4 );
 
-// Enqueue custom styles and scripts
 function learndash_custom_tab_enqueue_scripts() {
-    wp_enqueue_style( 'learndash-custom-tab-style', plugins_url( '/css/custom-tab-style.css', __FILE__ ) );
-    wp_enqueue_script( 'learndash-custom-tab-script', plugins_url( '/js/custom-tab-script.js', __FILE__ ), array( 'jquery' ), null, true );
-}
-add_action( 'wp_enqueue_scripts', 'learndash_custom_tab_enqueue_scripts' );
+    // Enqueue Select2 CSS
+    wp_enqueue_style( 'select2-css', 'https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css' );
 
-// Load plugin textdomain for translations.
+    // Enqueue jQuery if it's not already included
+    wp_enqueue_script( 'jquery' );
+
+    // Enqueue Select2 JS
+    wp_enqueue_script( 'select2-js', 'https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js', array( 'jquery' ), null, true );
+
+    // Enqueue your custom script
+    wp_enqueue_script( 'learndash-custom-tab-script', plugins_url( '/assets/js/custom-tab-script.js', __FILE__ ), array( 'jquery', 'select2-js' ), null, true );
+}
+add_action( 'admin_enqueue_scripts', 'learndash_custom_tab_enqueue_scripts' );
+
+
+// Load plugin textdomain for translations
 function learndash_custom_tab_load_textdomain() {
     load_plugin_textdomain( 'learndash-custom-tab', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
 }
