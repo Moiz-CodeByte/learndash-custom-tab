@@ -14,6 +14,15 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
+
+function learndash_custom_tab_action_links( $links ) {
+    $links[] = '<a href="' . admin_url( 'edit.php?post_type=custom_tab' ) . '">' . __( 'Custom Tabs', 'learndash-custom-tab' ) . '</a>';
+    return $links;
+}
+add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), 'learndash_custom_tab_action_links' );
+
+
+
 // Register Custom Post Type
 function register_custom_tab_cpt() {
     $labels = array(
