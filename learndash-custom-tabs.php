@@ -4,6 +4,7 @@ Plugin Name: LearnDash Custom Tab
 Description: Adds a custom tab to LearnDash courses, lessons, topics, and quizzes.
 Version: 1.3
 Author: Abdul Moiz
+Author URI: http://abdulmoiz.net
 Text Domain: learndash-custom-tab
 Domain Path: /languages
 */
