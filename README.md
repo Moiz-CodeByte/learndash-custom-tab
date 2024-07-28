@@ -6,7 +6,7 @@ A plugin for WordPress Website that add features to LearnDash LMS Plugin. It add
 
 # Learndash Custom Tab Plugin
 
-![Learndash Custom Tab Plugin](screenshot.png)
+![Learndash Custom Tab Plugin](Assets/screenshot.jpeg)
 
 ## Table of Contents
 - [Introduction](#introduction)
